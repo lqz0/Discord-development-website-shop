@@ -23,3 +23,5 @@ Built with HTML, CSS, and JavaScript, featuring smooth animations, responsive la
 
 # 💜 Discord Develop
 **Build a better Discord.**
+
+-# AI was used during the code the website is fully AI Coded so dont oppen pull requests!
