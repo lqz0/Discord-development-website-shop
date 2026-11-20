@@ -1,0 +1,2510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b0d15">
+  <meta name="description" content="Discord Develop — custom Discord server setup, bots, roles, automations and community systems.">
+  <title>Discord Develop — Build a better Discord</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7fc;
+      --surface: rgba(255, 255, 255, 0.86);
+      --solid: #ffffff;
+      --text: #131624;
+      --muted: #5a6075;
+      --line: rgba(24, 30, 56, 0.09);
+      --accent: #5865f2;
+      --accent2: #8b5cf6;
+      --accent-glow: rgba(88, 101, 242, 0.25);
+      --soft: #eceeff;
+      --shadow: 0 22px 60px rgba(24, 30, 72, 0.08);
+      --nav: rgba(246, 247, 252, 0.82);
+      --online: #23a55a;
+      --idle: #f0b232;
+      --dnd: #f23f43;
+      --offline: #80848e;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 96px;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "DM Sans", sans-serif;
+      line-height: 1.6;
+      transition: background 0.28s ease, color 0.28s ease;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient Mesh & Grid Background */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 14% 6%, rgba(88, 101, 242, 0.16), transparent 40%),
+        radial-gradient(circle at 86% 24%, rgba(139, 92, 246, 0.14), transparent 38%),
+        radial-gradient(circle at 50% 88%, rgba(88, 101, 242, 0.09), transparent 45%);
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(120, 128, 180, 0.16) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent 85%);
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent 85%);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .wrap {
+      width: min(1160px, calc(100% - 44px));
+      margin: 0 auto;
+    }
+
+    /* Top Dev Team Strip */
+    .dev-strip {
+      background: var(--solid);
+      border-bottom: 1px solid var(--line);
+      padding: 9px 0;
+      position: relative;
+      z-index: 35;
+    }
+
+    .dev-strip-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .dev-member {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      display: inline-flex;
+      flex-shrink: 0;
+    }
+
+    .dev-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--accent);
+      background: linear-gradient(135deg, #5865f2, #8b5cf6);
+      box-shadow: 0 0 0 3px var(--soft);
+    }
+
+    .status-dot {
+      position: absolute;
+      right: -1px;
+      bottom: -1px;
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--offline);
+      border: 2px solid var(--solid);
+      transition: background 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .status-dot[data-status="online"] {
+      background: var(--online);
+      box-shadow: 0 0 8px rgba(35, 165, 90, 0.7);
+    }
+    .status-dot[data-status="idle"] { background: var(--idle); }
+    .status-dot[data-status="dnd"] { background: var(--dnd); }
+
+    .dev-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 12.5px;
+    }
+
+    .dev-role {
+      font-weight: 800;
+      color: var(--accent);
+      background: var(--soft);
+      padding: 2px 9px;
+      border-radius: 99px;
+      font-size: 10.5px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    .dev-name {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .dev-id {
+      color: var(--muted);
+      font-size: 11.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .dev-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      padding: 2px 9px;
+      border-radius: 99px;
+      border: 1px solid var(--line);
+      background: var(--bg);
+    }
+
+    .dev-actions-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dev-team-btn {
+      border: 1px solid var(--line);
+      background: var(--soft);
+      color: var(--text);
+      padding: 7px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .dev-team-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 6px 18px var(--accent-glow);
+    }
+
+    .dev-team-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Navigation */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: var(--nav);
+      border-bottom: 1px solid var(--line);
+    }
+
+    nav {
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      font: 700 19px/1 "Space Grotesk", sans-serif;
+      letter-spacing: -0.6px;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      color: #ffffff;
+      font: 700 13px/1 "Space Grotesk", sans-serif;
+      background: linear-gradient(135deg, #5865f2, #9b73f5);
+      box-shadow: 0 8px 22px rgba(88, 101, 242, 0.34);
+    }
+
+    .brand-mark svg {
+      width: 21px;
+      height: 21px;
+    }
+
+    .navlinks {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+      color: var(--muted);
+      font-size: 13.5px;
+      font-weight: 600;
+    }
+
+    .navlinks a {
+      position: relative;
+      padding: 4px 0;
+      transition: color 0.2s ease;
+    }
+
+    .navlinks a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 0;
+      height: 2px;
+      border-radius: 2px;
+      background: var(--accent);
+      transition: width 0.22s ease;
+    }
+
+    .navlinks a:hover {
+      color: var(--text);
+    }
+
+    .navlinks a:hover::after {
+      width: 100%;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .theme-btn,
+    .menu-btn {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--text);
+      width: 41px;
+      height: 41px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .theme-btn:hover,
+    .menu-btn:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+
+    .theme-btn svg,
+    .menu-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .btn {
+      border: 0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 22px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 13.5px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .btn svg {
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      color: #ffffff;
+      background: linear-gradient(120deg, #5865f2, #8b5cf6);
+      box-shadow: 0 10px 26px rgba(88, 101, 242, 0.3);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 15px 34px rgba(88, 101, 242, 0.42);
+    }
+
+    .btn-quiet {
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+
+    .btn-quiet:hover {
+      border-color: var(--accent);
+      background: var(--solid);
+    }
+
+    .menu-btn {
+      display: none;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 80px 0 72px;
+      display: grid;
+      grid-template-columns: 1.06fr 0.94fr;
+      align-items: center;
+      gap: 54px;
+      min-height: 600px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      border-radius: 99px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    }
+
+    .pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #23a55a;
+      box-shadow: 0 0 0 4px rgba(35, 165, 90, 0.2);
+      animation: pulseRing 2.2s infinite;
+    }
+
+    @keyframes pulseRing {
+      0% { box-shadow: 0 0 0 0 rgba(35, 165, 90, 0.45); }
+      70% { box-shadow: 0 0 0 7px rgba(35, 165, 90, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(35, 165, 90, 0); }
+    }
+
+    h1, h2, h3, p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin: 22px 0 18px;
+      font: 700 clamp(40px, 5.2vw, 66px)/1.04 "Space Grotesk", sans-serif;
+      letter-spacing: -3px;
+      max-width: 630px;
+    }
+
+    .gradient {
+      background: linear-gradient(100deg, #5865f2 10%, #a855f7 90%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero-copy {
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.75;
+      max-width: 520px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 28px;
+    }
+
+    .trust {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 34px;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+
+    .badges {
+      display: flex;
+      padding-left: 4px;
+    }
+
+    .badge-dot {
+      width: 28px;
+      height: 28px;
+      margin-left: -6px;
+      border: 2px solid var(--bg);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font: 700 10px/1 "Space Grotesk", sans-serif;
+      color: #ffffff;
+      background: linear-gradient(135deg, #5865f2, #9b73f5);
+    }
+
+    /* Interactive Discord Server Preview Window */
+    .visual {
+      position: relative;
+      min-height: 440px;
+      display: grid;
+      place-items: center;
+    }
+
+    .glow {
+      position: absolute;
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(88, 101, 242, 0.34), rgba(168, 85, 247, 0.26));
+      filter: blur(52px);
+    }
+
+    .discord-window {
+      position: relative;
+      width: min(100%, 490px);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--solid);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transform: rotate(1deg);
+      animation: float 6.5s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(1deg); }
+      50% { transform: translateY(-9px) rotate(0.3deg); }
+    }
+
+    .win-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .win-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .win-dots span {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .win-dots span:nth-child(1) { background: #f23f43; }
+    .win-dots span:nth-child(2) { background: #f0b232; }
+    .win-dots span:nth-child(3) { background: #23a55a; }
+
+    .win-body {
+      display: grid;
+      grid-template-columns: 152px 1fr;
+      min-height: 300px;
+    }
+
+    .channel-sidebar {
+      background: var(--bg);
+      border-right: 1px solid var(--line);
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .server-header-pill {
+      font: 700 12.5px "Space Grotesk", sans-serif;
+      padding: 6px 8px 10px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cat-label {
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+      padding: 6px 8px 2px;
+      text-transform: uppercase;
+    }
+
+    .ch-btn {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      text-align: left;
+      padding: 7px 9px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.18s ease, color 0.18s ease;
+    }
+
+    .ch-btn:hover {
+      background: var(--soft);
+      color: var(--text);
+    }
+
+    .ch-btn.active {
+      background: var(--soft);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .ch-hash {
+      opacity: 0.7;
+      font-weight: 700;
+    }
+
+    .chat-area {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--solid);
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--line);
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+
+    .chat-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: rgba(35, 165, 90, 0.15);
+      color: #23a55a;
+    }
+
+    .chat-feed {
+      display: grid;
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .bot-msg {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .bot-avi {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #5865f2, #8b5cf6);
+      color: #fff;
+      font: 700 10px "Space Grotesk", sans-serif;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .bot-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bot-name-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
+    .app-tag {
+      background: #5865f2;
+      color: #fff;
+      font-size: 9px;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    .embed-box {
+      margin-top: 5px;
+      padding: 9px 11px;
+      border-radius: 8px;
+      background: var(--bg);
+      border-left: 3px solid var(--accent);
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .embed-box strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 2px;
+      font-size: 12px;
+    }
+
+    .role-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 6px;
+    }
+
+    .r-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--solid);
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+
+    .r-pill i {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    .chat-input-mock {
+      padding: 8px 11px;
+      border-radius: 9px;
+      background: var(--bg);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 11px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .float-tag {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--solid);
+      box-shadow: var(--shadow);
+      font-size: 11.5px;
+      font-weight: 700;
+      animation: floatTag 5s ease-in-out infinite;
+      z-index: 2;
+    }
+
+    .float-tag.one {
+      top: 16px;
+      right: -10px;
+    }
+
+    .float-tag.two {
+      bottom: 16px;
+      left: -14px;
+      animation-delay: -2.2s;
+    }
+
+    @keyframes floatTag {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-7px); }
+    }
+
+    .tag-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 8px;
+      background: var(--soft);
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      font: 700 10px/1 "Space Grotesk", sans-serif;
+    }
+
+    /* Stats Ribbon */
+    .stats-strip {
+      padding: 10px 0 34px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .metric-card {
+      padding: 20px 22px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+      backdrop-filter: blur(12px);
+    }
+
+    .metric-card strong {
+      display: block;
+      font: 700 28px/1.1 "Space Grotesk", sans-serif;
+      letter-spacing: -1px;
+      background: linear-gradient(100deg, var(--text), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .metric-card span {
+      display: block;
+      margin-top: 5px;
+      font-size: 12.5px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    /* Sections */
+    section {
+      padding: 76px 0;
+    }
+
+    .section-head {
+      max-width: 620px;
+      margin: 0 auto 46px;
+      text-align: center;
+    }
+
+    .kicker {
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      margin-bottom: 11px;
+    }
+
+    h2 {
+      font: 700 clamp(30px, 4vw, 44px)/1.12 "Space Grotesk", sans-serif;
+      letter-spacing: -1.6px;
+      margin-bottom: 13px;
+    }
+
+    .section-head p {
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14.5px;
+    }
+
+    /* Services Grid */
+    .services {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .service {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--surface);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .service::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top right, rgba(88, 101, 242, 0.09), transparent 65%);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      pointer-events: none;
+    }
+
+    .service:hover {
+      transform: translateY(-5px);
+      border-color: rgba(88, 101, 242, 0.5);
+      box-shadow: var(--shadow);
+    }
+
+    .service:hover::before {
+      opacity: 1;
+    }
+
+    .service-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      background: var(--soft);
+      color: var(--accent);
+      display: grid;
+      place-items: center;
+      margin-bottom: 18px;
+    }
+
+    .service-icon svg {
+      width: 21px;
+      height: 21px;
+    }
+
+    .service h3 {
+      font: 700 17.5px "Space Grotesk", sans-serif;
+      margin-bottom: 8px;
+    }
+
+    .service p {
+      color: var(--muted);
+      font-size: 13.5px;
+      line-height: 1.68;
+      margin: 0;
+    }
+
+    /* Feature Band */
+    .feature-band {
+      margin-top: 64px;
+      padding: 38px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: linear-gradient(125deg, var(--soft), var(--surface));
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .feature-band h3 {
+      font: 700 24px "Space Grotesk", sans-serif;
+      margin-bottom: 8px;
+    }
+
+    .feature-band p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.65;
+      max-width: 580px;
+    }
+
+    .checklist {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 11px 28px;
+      margin-top: 22px;
+    }
+
+    .check {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .check svg {
+      width: 15px;
+      height: 15px;
+      color: #23a55a;
+      flex-shrink: 0;
+    }
+
+    /* Pricing */
+    .pricing {
+      max-width: 590px;
+      margin: 0 auto;
+      padding: 38px;
+      border: 1px solid rgba(88, 101, 242, 0.45);
+      border-radius: 26px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pricing::before {
+      content: "";
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      right: -120px;
+      top: -130px;
+      border-radius: 50%;
+      background: rgba(88, 101, 242, 0.16);
+      pointer-events: none;
+    }
+
+    .price-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .price-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.7px;
+    }
+
+    .price-badge {
+      color: var(--accent);
+      background: var(--soft);
+      padding: 6px 12px;
+      border-radius: 99px;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+    }
+
+    .price {
+      font: 700 42px/1.1 "Space Grotesk", sans-serif;
+      margin: 16px 0 8px;
+      letter-spacing: -1.4px;
+    }
+
+    .price span {
+      font: 500 14.5px "DM Sans", sans-serif;
+      color: var(--muted);
+      letter-spacing: 0;
+    }
+
+    .price-desc {
+      color: var(--muted);
+      font-size: 13.5px;
+      line-height: 1.65;
+    }
+
+    .price-list {
+      display: grid;
+      gap: 13px;
+      margin: 24px 0 28px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .price-list li {
+      font-size: 13.5px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .price-list li svg {
+      width: 16px;
+      height: 16px;
+      color: #23a55a;
+      flex-shrink: 0;
+    }
+
+    .pricing .btn {
+      width: 100%;
+    }
+
+    .fineprint {
+      color: var(--muted);
+      font-size: 11px;
+      text-align: center;
+      margin: 14px 0 0;
+      line-height: 1.6;
+    }
+
+    /* Steps */
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .step {
+      padding: 26px;
+      border: 1px solid var(--line);
+      border-top: 3px solid var(--accent);
+      background: var(--surface);
+      border-radius: 18px;
+    }
+
+    .step-no {
+      color: var(--accent);
+      font: 700 12px "Space Grotesk", sans-serif;
+      letter-spacing: 1px;
+    }
+
+    .step h3 {
+      font: 700 17.5px "Space Grotesk", sans-serif;
+      margin: 12px 0 8px;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 13.5px;
+      line-height: 1.68;
+      margin: 0;
+    }
+
+    /* FAQ */
+    .faq {
+      max-width: 760px;
+      margin: 0 auto;
+      display: grid;
+      gap: 12px;
+    }
+
+    details.faq-item {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    details.faq-item:hover {
+      border-color: rgba(88, 101, 242, 0.45);
+    }
+
+    details.faq-item[open] {
+      border-color: rgba(88, 101, 242, 0.55);
+      box-shadow: var(--shadow);
+    }
+
+    summary.faq-q {
+      list-style: none;
+      padding: 19px 22px;
+      color: var(--text);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    summary.faq-q::-webkit-details-marker {
+      display: none;
+    }
+
+    .faq-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: var(--soft);
+      color: var(--accent);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+
+    .faq-icon svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    details.faq-item[open] .faq-icon {
+      transform: rotate(45deg);
+    }
+
+    .faq-a {
+      padding: 0 22px 20px;
+      color: var(--muted);
+      font-size: 13.5px;
+      line-height: 1.7;
+    }
+
+    .faq-a p {
+      margin: 0;
+    }
+
+    /* CTA */
+    .cta {
+      text-align: center;
+      padding: 58px 28px;
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: linear-gradient(125deg, var(--soft), var(--surface));
+    }
+
+    .cta p {
+      color: var(--muted);
+      font-size: 14.5px;
+      line-height: 1.7;
+      max-width: 500px;
+      margin: 0 auto 24px;
+    }
+
+    /* Footer */
+    footer {
+      padding: 32px 0 40px;
+      border-top: 1px solid var(--line);
+    }
+
+    .footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 22px;
+    }
+
+    .footer-links a:hover {
+      color: var(--accent);
+    }
+
+    /* Modals */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(8, 10, 18, 0.74);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop:target,
+    .modal-backdrop.show {
+      display: grid;
+      animation: fade 0.2s ease;
+    }
+
+    .modal {
+      width: min(100%, 455px);
+      padding: 30px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--solid);
+      box-shadow: 0 28px 90px rgba(0, 0, 0, 0.42);
+      animation: pop 0.24s ease;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      right: 18px;
+      top: 18px;
+      border: 0;
+      background: var(--soft);
+      color: var(--text);
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background 0.2s ease, color 0.2s ease;
+    }
+
+    .modal-close:hover {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .modal-close svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    .modal h3 {
+      font: 700 24px "Space Grotesk", sans-serif;
+      margin: 4px 0 10px;
+    }
+
+    .modal p {
+      color: var(--muted);
+      font-size: 13.5px;
+      line-height: 1.68;
+    }
+
+    .team-card {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--bg);
+      margin: 18px 0;
+    }
+
+    .team-card-avatar {
+      width: 62px;
+      height: 62px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2.5px solid var(--accent);
+      background: linear-gradient(135deg, #5865f2, #8b5cf6);
+      box-shadow: 0 0 0 4px var(--soft);
+    }
+
+    .team-card-status {
+      width: 14px;
+      height: 14px;
+      border-width: 2.5px;
+      right: 0;
+      bottom: 0;
+    }
+
+    .team-card-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .team-card-top {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-bottom: 5px;
+    }
+
+    .team-card-role {
+      display: inline-block;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--soft);
+      padding: 3px 8px;
+      border-radius: 99px;
+    }
+
+    .team-card-status-text {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .team-card-name {
+      font: 700 18.5px "Space Grotesk", sans-serif;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .team-card-sub {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .team-card-id {
+      font-size: 11.5px;
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      margin-top: 3px;
+    }
+
+    .discord-user {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--bg);
+      margin: 12px 0;
+    }
+
+    .discord-user-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+
+    .discord-user strong {
+      font: 700 15.5px "Space Grotesk", sans-serif;
+      letter-spacing: -0.2px;
+      user-select: all;
+    }
+
+    .copy-btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 14px;
+      background: var(--soft);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover,
+    .copy-btn.copied {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      z-index: 80;
+      background: var(--solid);
+      color: var(--text);
+      border: 1px solid var(--accent);
+      box-shadow: var(--shadow);
+      padding: 12px 17px;
+      border-radius: 13px;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    @keyframes fade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes pop {
+      from { opacity: 0; transform: translateY(12px) scale(0.98); }
+      to { opacity: 1; transform: none; }
+    }
+
+    /* Dark Mode Toggle (checked by default) */
+    .theme-switch {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .theme-label {
+      cursor: pointer;
+    }
+
+    .theme-label .moon-icon {
+      display: none;
+    }
+
+    body:has(#themeSwitch:checked) {
+      color-scheme: dark;
+      --bg: #0b0d15;
+      --surface: rgba(20, 23, 37, 0.88);
+      --solid: #141725;
+      --text: #f3f5ff;
+      --muted: #9aa0b8;
+      --line: rgba(225, 228, 255, 0.09);
+      --accent: #7c85ff;
+      --accent2: #a855f7;
+      --accent-glow: rgba(124, 133, 255, 0.28);
+      --soft: #1f2338;
+      --shadow: 0 22px 65px rgba(0, 0, 0, 0.45);
+      --nav: rgba(11, 13, 21, 0.85);
+    }
+
+    body:has(#themeSwitch:checked) .theme-label .sun-icon {
+      display: none;
+    }
+
+    body:has(#themeSwitch:checked) .theme-label .moon-icon {
+      display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 32px;
+        padding-top: 64px;
+        text-align: center;
+      }
+
+      .hero-copy {
+        margin: 0 auto;
+      }
+
+      .hero-buttons,
+      .trust {
+        justify-content: center;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .services {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .feature-band {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-band > .btn {
+        justify-self: start;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .wrap {
+        width: calc(100% - 32px);
+      }
+
+      .dev-strip-inner {
+        justify-content: center;
+        text-align: center;
+      }
+
+      .dev-member {
+        justify-content: center;
+      }
+
+      nav {
+        height: 68px;
+      }
+
+      .navlinks {
+        display: none;
+        position: absolute;
+        top: 68px;
+        left: 0;
+        right: 0;
+        padding: 18px 22px 22px;
+        background: var(--solid);
+        border-bottom: 1px solid var(--line);
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+      }
+
+      .navlinks.open {
+        display: flex;
+      }
+
+      .menu-btn {
+        display: grid;
+      }
+
+      .nav-actions > .btn {
+        display: none;
+      }
+
+      .hero {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+        padding: 44px 0 28px;
+        gap: 24px;
+      }
+
+      .hero h1 {
+        font-size: clamp(36px, 10vw, 46px);
+        letter-spacing: -2.2px;
+      }
+
+      .visual {
+        width: 100%;
+        min-height: 310px;
+      }
+
+      .discord-window {
+        transform: none;
+        animation: none;
+      }
+
+      .win-body {
+        grid-template-columns: 118px 1fr;
+      }
+
+      .float-tag.one {
+        right: 0;
+        top: -12px;
+      }
+
+      .float-tag.two {
+        left: 0;
+        bottom: -12px;
+      }
+
+      section {
+        padding: 58px 0;
+      }
+
+      .services,
+      .steps,
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-band {
+        padding: 24px;
+      }
+
+      .checklist {
+        grid-template-columns: 1fr;
+      }
+
+      .pricing {
+        padding: 26px 22px;
+      }
+
+      .footer-row {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .footer-links {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <input class="theme-switch" type="checkbox" id="themeSwitch" checked aria-label="Toggle dark mode">
+
+  <!-- Dev Team Bar (Top) -->
+  <div class="dev-strip" aria-label="Development team">
+    <div class="wrap dev-strip-inner">
+      <div class="dev-member">
+        <span class="avatar-wrap">
+          <img
+            class="dev-avatar discord-avatar-img"
+            data-discord-id="1084053563065503835"
+            alt="lqz0 Discord avatar"
+          >
+          <span class="status-dot discord-status-dot" data-discord-id="1084053563065503835" data-status="offline" title="Discord Status"></span>
+        </span>
+        <div class="dev-meta">
+          <span class="dev-role">Main-Dev</span>
+          <span class="dev-name discord-display-name" data-discord-id="1084053563065503835">lqz0</span>
+          <span class="dev-id">(1084053563065503835)</span>
+          <span class="dev-status-pill discord-status-label" data-discord-id="1084053563065503835">Discord Live</span>
+        </div>
+      </div>
+      <div class="dev-actions-bar">
+        <button class="dev-team-btn" id="openDevTeamBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Our Dev Team
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <div class="wrap">
+      <nav>
+        <a class="brand" href="#home" aria-label="Discord Develop home">
+          <span class="brand-mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 7.5c4.5-2.5 9.5-2.5 14 0l1.5 10c-2.2 1.8-4.1 2.5-6 3l-1.2-2.1M5 7.5l-1.5 10c2.2 1.8 4.1 2.5 6 3l1.2-2.1M8.5 15h.01M15.5 15h.01M8 11.5c2.7 1.5 5.3 1.5 8 0"/>
+            </svg>
+          </span>
+          discord develop
+        </a>
+
+        <div class="navlinks" id="navlinks">
+          <a href="#services">Services</a>
+          <a href="#process">How it works</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#faq">FAQ</a>
+        </div>
+
+        <div class="nav-actions">
+          <label class="theme-btn theme-label" for="themeSwitch" aria-label="Toggle light and dark mode" title="Toggle light and dark mode">
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>
+            </svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5 8.5 8.5 0 1 0 20.5 14.5Z"/>
+            </svg>
+          </label>
+          <a class="btn btn-primary" href="#buyModal">
+            Get started
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          </a>
+          <button class="menu-btn" id="menuToggle" type="button" aria-label="Open menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 7h16M4 12h16M4 17h16"/>
+            </svg>
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="home">
+    <div class="wrap hero">
+      <div>
+        <div class="eyebrow"><span class="pulse"></span> Your server, professionally built</div>
+        <h1>Make your Discord server <span class="gradient">stand out.</span></h1>
+        <p class="hero-copy">From a clean server structure to custom bot setups, ticket systems and smart automations &mdash; we turn your ideas into a Discord community that just works.</p>
+        <div class="hero-buttons">
+          <a class="btn btn-primary" href="#pricing">
+            Explore the offer
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+          </a>
+          <a class="btn btn-quiet" href="#services">What we do</a>
+        </div>
+        <div class="trust">
+          <div class="badges">
+            <span class="badge-dot">01</span>
+            <span class="badge-dot">02</span>
+            <span class="badge-dot">03</span>
+          </div>
+          <span>Thoughtful setup. Clean design. Built around your community.</span>
+        </div>
+      </div>
+
+      <!-- Interactive Discord Server Preview -->
+      <div class="visual" aria-label="Interactive Discord server preview">
+        <div class="glow"></div>
+        <div class="float-tag one"><span class="tag-icon">01</span> Interactive preview</div>
+        <div class="discord-window">
+          <div class="win-topbar">
+            <div class="win-dots"><span></span><span></span><span></span></div>
+            <span>DISCORD SERVER PREVIEW</span>
+            <span>v2.6</span>
+          </div>
+          <div class="win-body">
+            <div class="channel-sidebar">
+              <div class="server-header-pill">
+                <span>Your Community</span>
+                <span style="color:var(--accent)">&#9662;</span>
+              </div>
+              <div class="cat-label">Information</div>
+              <button class="ch-btn active" type="button" data-preview="welcome"><span class="ch-hash">#</span> welcome</button>
+              <button class="ch-btn" type="button" data-preview="roles"><span class="ch-hash">#</span> self-roles</button>
+              <div class="cat-label">Support &amp; Staff</div>
+              <button class="ch-btn" type="button" data-preview="tickets"><span class="ch-hash">#</span> support-ticket</button>
+              <button class="ch-btn" type="button" data-preview="logs"><span class="ch-hash">#</span> mod-logs</button>
+            </div>
+            <div class="chat-area">
+              <div>
+                <div class="chat-header">
+                  <span id="previewChannelTitle"># welcome</span>
+                  <span class="chat-badge">Configured</span>
+                </div>
+                <div class="chat-feed" id="previewFeed">
+                  <div class="bot-msg">
+                    <div class="bot-avi">DD</div>
+                    <div class="bot-content">
+                      <div class="bot-name-row">
+                        <span>Server Guard</span>
+                        <span class="app-tag">BOT</span>
+                      </div>
+                      <div class="embed-box">
+                        <strong>Welcome to the community!</strong>
+                        Auto-role <b>@Member</b> assigned. Check rules and pick your interests in #self-roles.
+                        <div class="role-pills">
+                          <span class="r-pill"><i style="background:#5865f2"></i> Member</span>
+                          <span class="r-pill"><i style="background:#23a55a"></i> Verified</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="chat-input-mock">
+                <span id="previewInputHint">Message #welcome</span>
+                <span>+</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="float-tag two"><span class="tag-icon">02</span> Organised &amp; ready</div>
+      </div>
+    </div>
+
+    <!-- Highlights Strip -->
+    <div class="wrap stats-strip">
+      <div class="stats-grid">
+        <div class="metric-card">
+          <strong>100% Custom</strong>
+          <span>Tailored channels, roles &amp; permissions</span>
+        </div>
+        <div class="metric-card">
+          <strong>Zero Clutter</strong>
+          <span>Clean hierarchy &amp; consistent styling</span>
+        </div>
+        <div class="metric-card">
+          <strong>Smart Bots</strong>
+          <span>Tickets, auto-mod, reaction roles &amp; logs</span>
+        </div>
+        <div class="metric-card">
+          <strong>1 Mo. Nitro</strong>
+          <span>Simple, transparent exchange</span>
+        </div>
+      </div>
+    </div>
+
+    <section id="services">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">What we build</div>
+          <h2>Everything your server needs.</h2>
+          <p>A good community starts with a solid foundation. We take care of the details so you can focus on your members.</p>
+        </div>
+
+        <div class="services">
+          <article class="service">
+            <div class="service-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="3" y="4" width="18" height="16" rx="3"/>
+                <path d="M8 8h8M8 12h5M8 16h8"/>
+              </svg>
+            </div>
+            <h3>Full server setup</h3>
+            <p>Categories, channels, permissions and a logical layout &mdash; designed around the purpose of your community.</p>
+          </article>
+
+          <article class="service">
+            <div class="service-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M8 8V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3M5 8h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z"/>
+                <path d="M9 13h.01M15 13h.01M9 17h6"/>
+              </svg>
+            </div>
+            <h3>Bot configuration</h3>
+            <p>Moderation, welcome messages, tickets, reaction roles, logging and other useful bot features.</p>
+          </article>
+
+          <article class="service">
+            <div class="service-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 19V5m0 14h16M8 15l3-4 3 2 5-7"/>
+              </svg>
+            </div>
+            <h3>Automation</h3>
+            <p>Helpful workflows that reduce repetitive admin tasks and keep everyday server management simple.</p>
+          </article>
+
+          <article class="service">
+            <div class="service-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M12 3 4 7v5c0 5 3.4 8 8 9 4.6-1 8-4 8-9V7l-8-4Z"/>
+                <path d="m9 12 2 2 4-4"/>
+              </svg>
+            </div>
+            <h3>Roles &amp; permissions</h3>
+            <p>Clear role hierarchies and sensible permissions to help protect your server and keep it manageable.</p>
+          </article>
+
+          <article class="service">
+            <div class="service-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M4 5h16v14H4zM8 9h8M8 13h5M8 17h8"/>
+              </svg>
+            </div>
+            <h3>Server design</h3>
+            <p>Consistent channel naming, clean information areas and a welcoming experience for new members.</p>
+          </article>
+
+          <article class="service">
+            <div class="service-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.6 5.6l2.1 2.1m8.6 8.6 2.1 2.1m0-12.8-2.1 2.1m-8.6 8.6-2.1 2.1"/>
+                <circle cx="12" cy="12" r="4"/>
+              </svg>
+            </div>
+            <h3>Custom requests</h3>
+            <p>Have a specific idea? Tell us what you need and we can discuss a setup that fits your project.</p>
+          </article>
+        </div>
+
+        <div class="feature-band">
+          <div>
+            <div class="kicker">The details matter</div>
+            <h3>A server that feels like yours.</h3>
+            <p>No random clutter or one-size-fits-all layout. The setup is planned to match your community and how you want it to grow.</p>
+            <div class="checklist">
+              <div class="check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg>
+                Made for your community
+              </div>
+              <div class="check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg>
+                Clear channel structure
+              </div>
+              <div class="check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg>
+                Useful bot features
+              </div>
+              <div class="check">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg>
+                Easy to manage
+              </div>
+            </div>
+          </div>
+          <a class="btn btn-quiet" href="#process">
+            See the process
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">Simple offer</div>
+          <h2>One clear way to get started.</h2>
+          <p>Tell us about your server and what you want built. We will confirm the scope with you before starting.</p>
+        </div>
+
+        <div class="pricing">
+          <div class="price-top">
+            <span class="price-label">DISCORD DEVELOPMENT</span>
+            <span class="price-badge">1 MONTH NITRO</span>
+          </div>
+          <div class="price">1 month <span>of Discord Nitro</span></div>
+          <p class="price-desc">The listed exchange for the development service is one month of Discord Nitro. The exact task list is agreed in Discord before work begins.</p>
+          <ul class="price-list">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg>
+              Server structure and channel setup
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg>
+              Roles and permission configuration
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg>
+              Bot setup and feature configuration
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg>
+              Basic testing and handover
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 13 4 4L19 7"/></svg>
+              Scope agreed before work starts
+            </li>
+          </ul>
+          <a class="btn btn-primary" href="#buyModal">
+            Get started
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          </a>
+          <p class="fineprint">Nitro is the agreed payment, not a subscription sold by this website. No payment is collected here. Availability and final scope are confirmed with the developer.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="process">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">How it works</div>
+          <h2>From idea to finished server.</h2>
+          <p>A straightforward process with the important details agreed upfront.</p>
+        </div>
+
+        <div class="steps">
+          <article class="step">
+            <div class="step-no">01 / CONTACT</div>
+            <h3>Tell us your idea</h3>
+            <p>Message us on Discord and explain what kind of server you want, including any bots or special features.</p>
+          </article>
+          <article class="step">
+            <div class="step-no">02 / PLAN</div>
+            <h3>Agree on the setup</h3>
+            <p>We will confirm what is included, what access is needed and the Nitro arrangement before any work begins.</p>
+          </article>
+          <article class="step">
+            <div class="step-no">03 / BUILD</div>
+            <h3>Get your server ready</h3>
+            <p>We configure the agreed setup, test the main features and hand it back with a quick walkthrough.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="kicker">Good to know</div>
+          <h2>Frequently asked questions.</h2>
+          <p>Still unsure? Send a message and ask before committing to anything.</p>
+        </div>
+
+        <div class="faq">
+          <details class="faq-item" open>
+            <summary class="faq-q">
+              <span>What does the one-month Nitro offer cover?</span>
+              <span class="faq-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+              </span>
+            </summary>
+            <div class="faq-a">
+              <p>It is the agreed payment for the development service. The exact server tasks and deliverables are confirmed with you in Discord before work starts.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-q">
+              <span>Can you set up an entire server?</span>
+              <span class="faq-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+              </span>
+            </summary>
+            <div class="faq-a">
+              <p>Yes. We can discuss a full structure including categories, channels, roles, permissions, moderation and community bots.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-q">
+              <span>Do I need to give you my password?</span>
+              <span class="faq-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+              </span>
+            </summary>
+            <div class="faq-a">
+              <p>No. Never share your Discord password or account login. Any required access should be provided through Discord's normal server roles and permissions.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-q">
+              <span>Is Discord Develop officially connected to Discord?</span>
+              <span class="faq-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>
+              </span>
+            </summary>
+            <div class="faq-a">
+              <p>No. Discord Develop is an independent service and is not affiliated with, endorsed by or sponsored by Discord Inc.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="cta">
+          <div class="kicker">Let's build something</div>
+          <h2>Ready to upgrade your server?</h2>
+          <p>Send over your idea. We will talk through the details and make sure the plan is clear before anything starts.</p>
+          <a class="btn btn-primary" href="#buyModal">
+            Contact on Discord
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap footer-row">
+      <a class="brand" href="#home"><span class="brand-mark">DD</span> discord develop</a>
+      <span>&copy; <span id="year">2026</span> Discord Develop. Independent community service.</span>
+      <div class="footer-links">
+        <a href="#services">Services</a>
+        <a href="#pricing">Offer</a>
+        <a href="#faq">FAQ</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Our Dev Team Modal -->
+  <div class="modal-backdrop" id="devTeamModal" role="dialog" aria-modal="true" aria-labelledby="devTeamTitle">
+    <div class="modal">
+      <button class="modal-close" id="closeDevTeamBtn" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+      <div class="kicker">Development</div>
+      <h3 id="devTeamTitle">Our Dev Team</h3>
+      <p>The developer behind Discord Develop responsible for server architecture, bots, roles and automations.</p>
+
+      <div class="team-card">
+        <span class="avatar-wrap">
+          <img
+            class="team-card-avatar discord-avatar-img"
+            data-discord-id="1084053563065503835"
+            alt="lqz0 Discord avatar"
+          >
+          <span class="status-dot team-card-status discord-status-dot" data-discord-id="1084053563065503835" data-status="offline"></span>
+        </span>
+        <div class="team-card-info">
+          <div class="team-card-top">
+            <span class="team-card-role">Main-Dev</span>
+            <span class="team-card-status-text discord-status-label" data-discord-id="1084053563065503835">Discord Profile</span>
+          </div>
+          <div class="team-card-name discord-display-name" data-discord-id="1084053563065503835">lqz0</div>
+          <div class="team-card-sub">@<span class="discord-username-text" data-discord-id="1084053563065503835">lqz0</span></div>
+          <div class="team-card-id">ID: 1084053563065503835</div>
+        </div>
+      </div>
+
+      <div class="discord-user">
+        <div>
+          <span class="discord-user-label">Discord Handle</span>
+          <strong>@<span class="discord-username-text" data-discord-id="1084053563065503835">lqz0</span></strong>
+        </div>
+        <button class="copy-btn" data-copy="@lqz0" type="button">Copy handle</button>
+      </div>
+
+      <div class="discord-user">
+        <div>
+          <span class="discord-user-label">Discord User ID</span>
+          <strong>1084053563065503835</strong>
+        </div>
+        <button class="copy-btn" data-copy="1084053563065503835" type="button">Copy ID</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Modal -->
+  <div class="modal-backdrop" id="buyModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <a class="modal-close" href="#pricing" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </a>
+      <div class="kicker">Let's talk</div>
+      <h3 id="modalTitle">Contact Discord Develop</h3>
+      <p>To discuss your server setup, copy the handle or User ID below and send a direct message in Discord.</p>
+
+      <div class="team-card" style="margin: 14px 0;">
+        <span class="avatar-wrap">
+          <img
+            class="dev-avatar discord-avatar-img"
+            style="width:48px;height:48px;"
+            data-discord-id="1084053563065503835"
+            alt="lqz0 Discord avatar"
+          >
+          <span class="status-dot discord-status-dot" data-discord-id="1084053563065503835" data-status="offline"></span>
+        </span>
+        <div class="team-card-info">
+          <div class="team-card-top" style="margin-bottom:2px;">
+            <span class="team-card-role">Main-Dev</span>
+            <span class="team-card-status-text discord-status-label" data-discord-id="1084053563065503835">Discord</span>
+          </div>
+          <div class="team-card-name discord-display-name" style="font-size:16px;" data-discord-id="1084053563065503835">lqz0</div>
+        </div>
+      </div>
+
+      <div class="discord-user">
+        <div>
+          <span class="discord-user-label">Main-Dev Handle</span>
+          <strong id="discordHandle">@lqz0</strong>
+        </div>
+        <button class="copy-btn" id="copyHandle" data-copy="@lqz0" type="button">Copy handle</button>
+      </div>
+
+      <div class="discord-user">
+        <div>
+          <span class="discord-user-label">Discord User ID</span>
+          <strong>1084053563065503835</strong>
+        </div>
+        <button class="copy-btn" data-copy="1084053563065503835" type="button">Copy ID</button>
+      </div>
+
+      <p class="fineprint">Add or message @lqz0 directly inside Discord to discuss your server setup.</p>
+    </div>
+  </div>
+
+  <div class="toast" id="copyToast" role="status" aria-live="polite">Copied to clipboard!</div>
+
+  <script>
+    // Reliable Discord Profile & Avatar Loader (with multi-API fallback + guaranteed SVG fallback)
+    (function syncDiscordProfile() {
+      const discordId = '1084053563065503835';
+      const avatarImgs = document.querySelectorAll('.discord-avatar-img[data-discord-id="' + discordId + '"]');
+      const statusDots = document.querySelectorAll('.discord-status-dot[data-discord-id="' + discordId + '"]');
+      const statusLabels = document.querySelectorAll('.discord-status-label[data-discord-id="' + discordId + '"]');
+      const displayNames = document.querySelectorAll('.discord-display-name[data-discord-id="' + discordId + '"]');
+      const usernameTexts = document.querySelectorAll('.discord-username-text[data-discord-id="' + discordId + '"]');
+
+      // Instant crisp Discord-styled fallback avatar so image is NEVER broken even offline/file://
+      const fallbackSvg = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">' +
+        '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0%" stop-color="#5865F2"/><stop offset="100%" stop-color="#8B5CF6"/>' +
+        '</linearGradient></defs>' +
+        '<rect width="128" height="128" fill="url(#g)"/>' +
+        '<path fill="#ffffff" d="M89.4 43.2a64.5 64.5 0 0 0-16-5 44 44 0 0 0-2 4.1 59.7 59.7 0 0 0-14.8 0 44 44 0 0 0-2-4.1 64.5 64.5 0 0 0-16 5C28.5 58.3 25.8 73 27.1 87.5a65.2 65.2 0 0 0 19.6 9.9 48.2 48.2 0 0 0 4.2-6.8 41.8 41.8 0 0 1-6.6-3.2c.6-.4 1.1-.8 1.6-1.3a46.5 46.5 0 0 0 36.2 0c.5.5 1 .9 1.6 1.3a41.8 41.8 0 0 1-6.6 3.2 48.2 48.2 0 0 0 4.2 6.8 65.2 65.2 0 0 0 19.6-9.9c1.5-16.8-2.6-31.4-11.5-44.3ZM52.8 78.6c-3.8 0-6.9-3.5-6.9-7.8s3-7.8 6.9-7.8 7 3.5 6.9 7.8c0 4.3-3.1 7.8-6.9 7.8Zm22.4 0c-3.8 0-6.9-3.5-6.9-7.8s3-7.8 6.9-7.8 7 3.5 6.9 7.8c0 4.3-3.1 7.8-6.9 7.8Z"/>' +
+        '</svg>'
+      );
+
+      avatarImgs.forEach((img) => {
+        img.src = fallbackSvg;
+        img.onerror = function () {
+          if (this.src !== fallbackSvg) this.src = fallbackSvg;
+        };
+      });
+
+      const statusTextMap = {
+        online: 'Online',
+        idle: 'Idle',
+        dnd: 'Do Not Disturb',
+        offline: 'Offline'
+      };
+
+      function applyProfile(profile) {
+        if (!profile) return;
+        if (profile.avatarUrl) {
+          avatarImgs.forEach((img) => {
+            img.src = profile.avatarUrl;
+          });
+        }
+        if (profile.displayName) {
+          displayNames.forEach((el) => {
+            el.textContent = profile.displayName;
+          });
+        }
+        if (profile.username) {
+          usernameTexts.forEach((el) => {
+            el.textContent = profile.username;
+          });
+        }
+        if (profile.status) {
+          statusDots.forEach((dot) => {
+            dot.setAttribute('data-status', profile.status);
+          });
+          statusLabels.forEach((lbl) => {
+            lbl.textContent = statusTextMap[profile.status] || 'Discord';
+          });
+        }
+      }
+
+      // Try multiple public Discord profile endpoints in parallel/fallback
+      const fetchLanyard = fetch('https://api.lanyard.rest/v1/users/' + discordId)
+        .then((res) => (res.ok ? res.json() : Promise.reject()))
+        .then((json) => {
+          const data = json && json.data;
+          const user = data && data.discord_user;
+          if (!user) return Promise.reject();
+          const ext = user.avatar && user.avatar.startsWith('a_') ? 'gif' : 'png';
+          const avatarUrl = user.avatar
+            ? 'https://cdn.discordapp.com/avatars/' + user.id + '/' + user.avatar + '.' + ext + '?size=256'
+            : null;
+          applyProfile({
+            avatarUrl: avatarUrl,
+            displayName: user.global_name || user.username,
+            username: user.username,
+            status: data.discord_status || 'offline'
+          });
+          return true;
+        });
+
+      fetchLanyard.catch(() => {
+        // Fallback 1: discordlookup.mesalytic.moe
+        fetch('https://discordlookup.mesalytic.moe/v1/user/' + discordId)
+          .then((res) => (res.ok ? res.json() : Promise.reject()))
+          .then((data) => {
+            if (!data || !data.id) return Promise.reject();
+            const avatarUrl =
+              (data.avatar && data.avatar.link) ||
+              (data.avatar && data.avatar.id
+                ? 'https://cdn.discordapp.com/avatars/' + data.id + '/' + data.avatar.id + '.png?size=256'
+                : null);
+            applyProfile({
+              avatarUrl: avatarUrl,
+              displayName: data.global_name || data.username,
+              username: data.username
+            });
+          })
+          .catch(() => {
+            // Fallback 2: japi.rest Discord user cache
+            fetch('https://japi.rest/discord/v1/user/' + discordId)
+              .then((res) => (res.ok ? res.json() : Promise.reject()))
+              .then((json) => {
+                const u = json && json.data;
+                if (!u) return;
+                const avatarUrl = u.avatarURL || (u.avatar
+                  ? 'https://cdn.discordapp.com/avatars/' + u.id + '/' + u.avatar + '.png?size=256'
+                  : null);
+                applyProfile({
+                  avatarUrl: avatarUrl,
+                  displayName: u.global_name || u.username,
+                  username: u.username
+                });
+              })
+              .catch(() => {});
+          });
+      });
+    })();
+
+    // Interactive Discord Channel Preview Switcher
+    (function initChannelPreview() {
+      const previewData = {
+        welcome: {
+          title: '# welcome',
+          hint: 'Message #welcome',
+          bot: 'Server Guard',
+          heading: 'Welcome to the community!',
+          body: 'Auto-role <b>@Member</b> assigned. Check rules and pick your interests in #self-roles.',
+          pills: [
+            { label: 'Member', color: '#5865f2' },
+            { label: 'Verified', color: '#23a55a' }
+          ]
+        },
+        roles: {
+          title: '# self-roles',
+          hint: 'Message #self-roles',
+          bot: 'Role Manager',
+          heading: 'Customise your profile',
+          body: 'Select notification pings, platform badges and community access roles with one click.',
+          pills: [
+            { label: 'Announcements', color: '#f0b232' },
+            { label: 'Events', color: '#a855f7' }
+          ]
+        },
+        tickets: {
+          title: '# support-ticket',
+          hint: 'Message #support-ticket',
+          bot: 'Ticket System',
+          heading: 'Need assistance from Staff?',
+          body: 'Click <b>Create Ticket</b> below to open a private channel with our moderation team.',
+          pills: [
+            { label: 'Private Thread', color: '#23a55a' },
+            { label: 'Transcripts On', color: '#5865f2' }
+          ]
+        },
+        logs: {
+          title: '# mod-logs',
+          hint: 'Read-only staff channel',
+          bot: 'Audit Logger',
+          heading: 'Automated Protection Active',
+          body: 'Anti-spam filters, raid protection and role updates logged in real time for staff review.',
+          pills: [
+            { label: 'Auto-Mod', color: '#f23f43' },
+            { label: '24/7 Active', color: '#23a55a' }
+          ]
+        }
+      };
+
+      const buttons = document.querySelectorAll('.ch-btn[data-preview]');
+      const titleEl = document.getElementById('previewChannelTitle');
+      const hintEl = document.getElementById('previewInputHint');
+      const feedEl = document.getElementById('previewFeed');
+
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const key = btn.getAttribute('data-preview');
+          const item = previewData[key];
+          if (!item || !feedEl) return;
+
+          buttons.forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          if (titleEl) titleEl.textContent = item.title;
+          if (hintEl) hintEl.textContent = item.hint;
+
+          const pillsHtml = item.pills
+            .map((p) => '<span class="r-pill"><i style="background:' + p.color + '"></i> ' + p.label + '</span>')
+            .join('');
+
+          feedEl.innerHTML =
+            '<div class="bot-msg">' +
+              '<div class="bot-avi">DD</div>' +
+              '<div class="bot-content">' +
+                '<div class="bot-name-row"><span>' + item.bot + '</span><span class="app-tag">BOT</span></div>' +
+                '<div class="embed-box"><strong>' + item.heading + '</strong>' + item.body +
+                  '<div class="role-pills">' + pillsHtml + '</div>' +
+                '</div>' +
+              '</div>' +
+            '</div>';
+        });
+      });
+    })();
+
+    // Our Dev Team modal controls + ESC key support
+    const devTeamModal = document.getElementById('devTeamModal');
+    const openDevTeamBtn = document.getElementById('openDevTeamBtn');
+    const closeDevTeamBtn = document.getElementById('closeDevTeamBtn');
+
+    if (devTeamModal && openDevTeamBtn) {
+      openDevTeamBtn.addEventListener('click', () => {
+        devTeamModal.classList.add('show');
+      });
+    }
+    if (devTeamModal && closeDevTeamBtn) {
+      closeDevTeamBtn.addEventListener('click', () => {
+        devTeamModal.classList.remove('show');
+      });
+    }
+    if (devTeamModal) {
+      devTeamModal.addEventListener('click', (event) => {
+        if (event.target === devTeamModal) {
+          devTeamModal.classList.remove('show');
+        }
+      });
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        if (devTeamModal) devTeamModal.classList.remove('show');
+        if (window.location.hash === '#buyModal') {
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      }
+    });
+
+    // Mobile navigation toggle
+    const menuToggle = document.getElementById('menuToggle');
+    const navlinks = document.getElementById('navlinks');
+    if (menuToggle && navlinks) {
+      menuToggle.addEventListener('click', () => {
+        navlinks.classList.toggle('open');
+      });
+      navlinks.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', () => {
+          navlinks.classList.remove('open');
+        });
+      });
+    }
+
+    // Clipboard copy with fallback & toast feedback
+    const copyToast = document.getElementById('copyToast');
+    let toastTimer = null;
+
+    function showToast(message) {
+      if (!copyToast) return;
+      copyToast.textContent = message;
+      copyToast.classList.add('visible');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        copyToast.classList.remove('visible');
+      }, 2000);
+    }
+
+    function copyTextToClipboard(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+      }
+      return fallbackCopy(text);
+    }
+
+    function fallbackCopy(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'fixed';
+      textarea.style.top = '-9999px';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try {
+        document.execCommand('copy');
+      } finally {
+        document.body.removeChild(textarea);
+      }
+      return Promise.resolve();
+    }
+
+    document.querySelectorAll('.copy-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const text = btn.getAttribute('data-copy') || '@lqz0';
+        const originalLabel = btn.textContent;
+        copyTextToClipboard(text).then(() => {
+          btn.textContent = 'Copied!';
+          btn.classList.add('copied');
+          showToast('Copied "' + text + '" to clipboard');
+          window.setTimeout(() => {
+            btn.textContent = originalLabel;
+            btn.classList.remove('copied');
+          }, 1800);
+        });
+      });
+    });
+
+    const yearEl = document.getElementById('year');
+    if (yearEl) {
+      yearEl.textContent = String(new Date().getFullYear());
+    }
+  </script>
+</body>
+</html>
